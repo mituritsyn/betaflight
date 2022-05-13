@@ -56,6 +56,7 @@ static pt1Filter_t rpmFilters[MAX_SUPPORTED_MOTORS];
 typedef struct rpmNotchFilter_s {
 
     uint8_t  harmonics;
+    float    harmonicFadePercent;
     float    minHz;
     float    maxHz;
     float    fadeRangeHz;
@@ -84,16 +85,18 @@ FAST_DATA static rpmNotchFilter_t *currentFilter = &filters[0];
 
 
 
-PG_REGISTER_WITH_RESET_FN(rpmFilterConfig_t, rpmFilterConfig, PG_RPM_FILTER_CONFIG, 5);
+PG_REGISTER_WITH_RESET_FN(rpmFilterConfig_t, rpmFilterConfig, PG_RPM_FILTER_CONFIG, 6);
 
 void pgResetFn_rpmFilterConfig(rpmFilterConfig_t *config)
 {
     config->rpm_filter_harmonics = 3;
     config->rpm_filter_min_hz = 100;
     config->rpm_filter_fade_range_hz = 50;
-    config->rpm_filter_q = 500;
-
     config->rpm_filter_lpf_hz = 150;
+    for(int i = 0; i < config->rpm_filter_harmonics; i++){
+        config->rpm_filter_harmonics_q[i] = 500;
+        config->rpm_filter_harmonics_fade_percent[i] = 100;
+    }
 }
 
 static void rpmNotchFilterInit(rpmNotchFilter_t *filter, const rpmFilterConfig_t *config, const timeUs_t looptimeUs)
@@ -102,12 +105,13 @@ static void rpmNotchFilterInit(rpmNotchFilter_t *filter, const rpmFilterConfig_t
     filter->minHz = config->rpm_filter_min_hz;
     filter->maxHz = 0.48f * 1e6f / looptimeUs; // don't go quite to nyquist to avoid oscillations
     filter->fadeRangeHz = config->rpm_filter_fade_range_hz;
-    filter->q = config->rpm_filter_q / 100.0f;
     filter->looptimeUs = looptimeUs;
 
     for (int axis = 0; axis < XYZ_AXIS_COUNT; axis++) {
         for (int motor = 0; motor < getMotorCount(); motor++) {
             for (int i = 0; i < filter->harmonics; i++) {
+                filter->harmonicFadePercent = config->rpm_filter_harmonics_fade_percent[i] / 100.0f;
+                filter->q = config->rpm_filter_harmonics_q[i] / 100.0f;
                 biquadFilterInit(
                     &filter->notch[axis][motor][i], filter->minHz * i, filter->looptimeUs, filter->q, FILTER_NOTCH, 0.0f);
             }
@@ -168,9 +172,9 @@ FAST_CODE_NOINLINE void rpmFilterUpdate(void)
 {
     for (int motor = 0; motor < getMotorCount(); motor++) {
         filteredMotorErpm[motor] = pt1FilterApply(&rpmFilters[motor], getDshotTelemetry(motor));
-        if (motor < 4) {
-            DEBUG_SET(DEBUG_RPM_FILTER, motor, motorFrequency[motor]);
-        }
+        // if (motor < 4) {
+        //     DEBUG_SET(DEBUG_RPM_FILTER, motor, motorFrequency[motor]);
+        // }
         motorFrequency[motor] = erpmToHz * filteredMotorErpm[motor];
     }
 
@@ -195,6 +199,11 @@ FAST_CODE_NOINLINE void rpmFilterUpdate(void)
         if (frequency < currentFilter->minHz + currentFilter->fadeRangeHz) {
             weight = (frequency - currentFilter->minHz) / currentFilter->fadeRangeHz;
         }
+        weight *= currentFilter->harmonicFadePercent;
+        DEBUG_SET(DEBUG_RPM_FILTER, 2, weight*100);
+        if(currentHarmonic == 0) DEBUG_SET(DEBUG_RPM_FILTER, 0, weight*100);
+        if(currentHarmonic == 1) DEBUG_SET(DEBUG_RPM_FILTER, 1, weight*100);
+        DEBUG_SET(DEBUG_RPM_FILTER, 3, frequency);
 
         biquadFilterUpdate(
             template, frequency, currentFilter->looptimeUs, currentFilter->q, FILTER_NOTCH, weight);

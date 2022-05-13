@@ -117,3 +117,5 @@
 #define PARAM_NAME_RPM_FILTER_MIN_HZ "rpm_filter_min_hz"
 #define PARAM_NAME_RPM_FILTER_FADE_RANGE_HZ "rpm_filter_fade_range_hz"
 #define PARAM_NAME_RPM_FILTER_LPF_HZ "rpm_filter_lpf_hz"
+#define PARAM_NAME_RPM_FILTER_HARMONIC_FADE_PERCENT "rpm_filter_harmonics_fade_percent"
+#define PARAM_NAME_RPM_FILTER_HARMONICS_Q "rpm_filter_harmonics_q"

@@ -1432,10 +1432,17 @@ static bool blackboxWriteSysinfo(void)
 #endif
 #ifdef USE_RPM_FILTER
         BLACKBOX_PRINT_HEADER_LINE(PARAM_NAME_RPM_FILTER_HARMONICS, "%d",     rpmFilterConfig()->rpm_filter_harmonics);
-        BLACKBOX_PRINT_HEADER_LINE(PARAM_NAME_RPM_FILTER_Q, "%d",             rpmFilterConfig()->rpm_filter_q);
         BLACKBOX_PRINT_HEADER_LINE(PARAM_NAME_RPM_FILTER_MIN_HZ, "%d",        rpmFilterConfig()->rpm_filter_min_hz);
         BLACKBOX_PRINT_HEADER_LINE(PARAM_NAME_RPM_FILTER_FADE_RANGE_HZ, "%d", rpmFilterConfig()->rpm_filter_fade_range_hz);
         BLACKBOX_PRINT_HEADER_LINE(PARAM_NAME_RPM_FILTER_LPF_HZ, "%d",        rpmFilterConfig()->rpm_filter_lpf_hz);
+        BLACKBOX_PRINT_HEADER_LINE(PARAM_NAME_RPM_FILTER_HARMONIC_FADE_PERCENT, "%d", "%d", "%d",
+                                                                              rpmFilterConfig()->rpm_filter_harmonics_fade_percent[0],
+                                                                              rpmFilterConfig()->rpm_filter_harmonics_fade_percent[1],
+                                                                              rpmFilterConfig()->rpm_filter_harmonics_fade_percent[2]);
+        BLACKBOX_PRINT_HEADER_LINE(PARAM_NAME_RPM_FILTER_HARMONICS_Q, "%d", "%d", "%d",
+                                                                              rpmFilterConfig()->rpm_filter_harmonics_q[0],
+                                                                              rpmFilterConfig()->rpm_filter_harmonics_q[1],
+                                                                              rpmFilterConfig()->rpm_filter_harmonics_q[2]);
 #endif
 #if defined(USE_ACC)
         BLACKBOX_PRINT_HEADER_LINE(PARAM_NAME_ACC_LPF_HZ, "%d",        (int)(accelerometerConfig()->acc_lpf_hz * 100.0f));
