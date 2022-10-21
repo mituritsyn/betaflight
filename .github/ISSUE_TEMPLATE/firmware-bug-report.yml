@@ -41,10 +41,7 @@ body:
         Create a `diff` and post it here. Instructions on how to do a diff: https://oscarliang.com/use-diff-not-dump-betaflight/
         Don't add three backticks or any other format symbol at the start or end of the block, they will be added automatically.
       placeholder: |
-      value:
-        <summary>
           # PASTE HERE THE OUTPUT OF `diff` COMMAND IN THE CLI TAB
-        </summary>
       render: txt
     validations:
       required: true
